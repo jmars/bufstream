@@ -36,7 +36,7 @@
 
 use std::fmt;
 use std::io::prelude::*;
-use std::io::{self, BufReader, BufWriter};
+use std::io::{self, BufReader, BufWriter, SeekFrom};
 
 const DEFAULT_BUF_SIZE: usize = 64 * 1024;
 
@@ -76,6 +76,12 @@ impl<W: Write> InternalBufWriter<W> {
 impl<W: Read + Write> Read for InternalBufWriter<W> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.get_mut().get_mut().read(buf)
+    }
+}
+
+impl<W: Read + Write + Seek> Seek for InternalBufWriter<W> {
+    fn seek(&mut self, pos: SeekFrom) -> std::io::Result<u64> {
+        self.get_mut().get_mut().seek(pos)
     }
 }
 
@@ -155,6 +161,12 @@ impl<S: Read + Write> Write for BufStream<S> {
     }
     fn flush(&mut self) -> io::Result<()> {
         self.inner.get_mut().0.as_mut().unwrap().flush()
+    }
+}
+
+impl<S: Read + Write + Seek> Seek for BufStream<S> {
+    fn seek(&mut self, pos: SeekFrom) -> std::io::Result<u64> {
+        self.inner.seek(pos)
     }
 }
 
